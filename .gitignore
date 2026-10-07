@@ -1,0 +1,6 @@
+node_modules/
+.env
+.dev.env
+.uat.env
+.preprod.env
+*.env*
