@@ -11,6 +11,10 @@ export default class BaseRepository {
         return this.model.findOne(filters);
     }
 
+    findDocumentById(id, select = '') {
+        return this.model.findById(id).select(select);
+    }
+
     findAndUpdateDocument(filters, updates, options = { new: true }) {
         return this.model.findOneAndUpdate(filters, updates, options);
     }

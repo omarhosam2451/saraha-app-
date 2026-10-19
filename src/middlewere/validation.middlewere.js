@@ -1,17 +1,20 @@
 import HttpAppError from "../uitilties/error/app-error.js"
 
-export const validation = (schema)=>{
-    return (req , res , next)=>{
-        const validationResult = schema.safeParse(req.body)
+export const validation = (schema, source = "body") => {
+    return (req, res, next) => {
+        const input = req[source]
+        const validationResult = schema.safeParse(input)
         if (!validationResult.success) {
-            throw new HttpAppError(
-                "Invalid request body",
-                402,
-                validationResult.error.issues,
-                "VALIDATION_ERROR"
+            return next(
+                new HttpAppError(
+                    "Validation failed",
+                    422,
+                    validationResult.error.issues,
+                    "VALIDATION_ERROR"
+                )
             )
         }
-        req.validate = validationResult.data
+        req.validate = { ...(req.validate || {}), ...validationResult.data }
         next()
     }
 }

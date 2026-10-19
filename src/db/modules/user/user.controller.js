@@ -1,83 +1,92 @@
 import { Router } from "express"
 import * as userService from "./user.service.js"
-import { authanticate } from "../../../middlewere/auth.middlewere.js"
+import { authanticate, authorize } from "../../../middlewere/auth.middlewere.js"
+import { validation } from "../../../middlewere/validation.middlewere.js"
+import {
+    updateProfileSchema,
+    adminUpdateUserSchema,
+    userIdParamSchema,
+} from "./user.validation.js"
 
 const userController = Router()
 
-userController.get('/', (req, res) => {
-    res.status(200).json({message: 'Hello from user controller!'})
+userController.get("/", (req, res) => {
+    res.status(200).json({ message: "Hello from user controller!" })
 })
 
-userController.get('/all', async (req, res) => {
+userController.get("/getUser", authanticate, async (req, res, next) => {
     try {
-        const users = await userService.getAllUsers()
-        res.status(200).json({ message: 'Users found successfully', users })
-    } catch (error) {
-        res.status(error.statusCode || 500).json({ message: error.message })
+        const profile = await userService.getMyProfile(req.authUser)
+        res.status(200).json({ message: "Profile fetched successfully", user: profile })
+    } catch (err) {
+        next(err)
     }
-})
+}
+)
 
-userController.get('/getUser', authanticate, async (req, res) => {
+userController.patch("/updateUser", authanticate, validation(updateProfileSchema, "body"), async (req, res, next) => {
     try {
-        const user = req.authUser
-        res.status(200).json({ message: 'User found successfully', user })
-    } catch (error) {
-        res.status(error.statusCode || 500).json({
-            message: error.message,
-            error: error.code || "INTERNAL_SERVER_ERROR"
-        })
+        const updated = await userService.updateMyProfile(req.authUser._id, req.validate)
+        res.status(200).json({ message: "Profile updated successfully", user: updated })
+    } catch (err) {
+        next(err)
     }
-})
+}
+)
 
-userController.patch("/updateUser/:id", async (req, res) => {
+userController.delete("/deleteMyAccount", authanticate, async (req, res, next) => {
     try {
-        const { firstName, lastName, gender, email } = req.body
+        const result = await userService.deleteAccount(req.authUser._id)
+        res.status(200).json({ message: "Account deactivated successfully", user: result })
+    } catch (err) {
+        next(err)
+    }
+}
+)
 
-        const userId = req.params.id
-
-        const result = await userService.updateProfile(
-            userId,
-            { firstName, lastName, gender, email }
-        )
-
-        res.status(200).json({
-            message: "User has been updated",
-            data: result
-        })
-
-    } catch (error) {
-        if (error.code === 11000) {
-            return res.status(409).json({
-                message: "Email already exists",
-                error: "Duplicate key error: email must be unique"
-            })
+userController.get("/getAll", authanticate, authorize(["admin"]),
+    async (req, res, next) => {
+        try {
+            const users = await userService.getAllUsers()
+            res.status(200).json({ message: "Users fetched successfully", users })
+        } catch (err) {
+            next(err)
         }
-        res.status(error.statusCode || 500).json({
-            message: error.message || "Something went wrong",
-            error: error.message
-        })
     }
-})
+)
 
-
-userController.delete("/deleteById/:id", async(req , res)=>{
-    try {
-      const userId = req.params.id
-      const result = await userService.deleteById(userId)
-              if (!result) {
-            return res.status(404).json({
-                message: "User not found"
-            })
+userController.get("/getUser/Id", authanticate, authorize(["admin"]), validation(userIdParamSchema, "params"),
+    async (req, res, next) => {
+        try {
+            const user = await userService.getUserById(req.validate.id)
+            res.status(200).json({ message: "User fetched successfully", user })
+        } catch (err) {
+            next(err)
         }
-
-        res.status(200).json({
-            message: "User has been deleted successfully",
-            data: result
-        })
-    } catch (error) {
-        res.status(error.statusCode || 500).json({ message: error.message })
     }
-})
+)
 
+userController.patch("/admin/:id", authanticate, authorize(["admin"]), validation(userIdParamSchema, "params"),
+    validation(adminUpdateUserSchema, "body"),
+    async (req, res, next) => {
+        try {
+            const { id, ...bodyData } = req.validate
+            const updated = await userService.adminUpdateUser(id, bodyData)
+            res.status(200).json({ message: "User updated successfully", user: updated })
+        } catch (err) {
+            next(err)
+        }
+    }
+)
+
+userController.delete("/deleteUser/:id", authanticate, authorize(["admin"]), validation(userIdParamSchema, "params"), async (req, res, next) => {
+    try {
+        const deleted = await userService.deleteById(req.validate.id)
+        res.status(200).json({ message: "User deleted successfully", user: deleted })
+    } catch (err) {
+        next(err)
+    }
+}
+)
 
 export default userController

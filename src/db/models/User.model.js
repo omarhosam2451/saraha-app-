@@ -1,4 +1,5 @@
 import mongoose from "mongoose"
+import { Gender, providersEnum, Role } from "../../uitilties/enums.js"
 
 const { Schema } = mongoose
 
@@ -17,12 +18,43 @@ const userSchema = new Schema({
         type: String,
         required: true,
     },
+    isEmailVerified: {
+        type: Boolean,
+        default: false,
+    }
+    , 
     gender:{
-        type:String , enum:["male","female"],
-        default:"male"
+        type:String , enum: Object.values(Gender),
+        default: Gender.MALE
     },
     age:{type:Number, min:18, max:100},
     profileImage:{type:String},
+    role: {
+        type: String,
+        enum: Object.values(Role),
+        default: Role.USER,
+    },
+    googleSub: {
+        type: String,
+        index: {
+            name: "google_sub_unique",
+            unique: true,
+            sparse: true,
+        },
+    },
+    provider: {
+        type: String,
+        enum: Object.values(providersEnum),
+        default: providersEnum.SYSTEM,
+    },
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
+    isActive: {
+        type: Boolean,
+        default: true,
+    },
 
 }
 ,{

@@ -1,45 +1,78 @@
 import mongoose from "mongoose"
 import User from "../../models/User.model.js"
-import jwt from "jsonwebtoken"
 import HttpAppError from "../../../uitilties/error/app-error.js"
-import envConfig from "../../../config/env.config.js"
 
-export const getUserById = async () => {
-const user = req.authUser
-	if (!mongoose.Types.ObjectId.isValid(decodedData._id)) {
-		throw new HttpAppError("Invalid authorization token", 401, {}, "UNAUTHORIZED")
-	}
+export const getUserById = async (userId) => {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new HttpAppError("Invalid user ID", 400, {}, "BAD_REQUEST")
+    }
 
-	if (!user) {
-		const error = new Error("User not found")
-		error.statusCode = 404
-		throw error	
-	}
+    const user = await User.findById(userId).select("-password")
+    if (!user) {
+        throw new HttpAppError("User not found", 404, {}, "USER_NOT_FOUND")
+    }
+    return user
+}
 
+export const getMyProfile = async (authUser) => {
+    return authUser
+}
 
+export const updateMyProfile = async (authUserId, data) => {
+    const { firstName, lastName, gender, age, profileImage } = data
+    const updated = await User.findByIdAndUpdate(
+        authUserId,
+        { firstName, lastName, gender, age, profileImage },
+        { new: true, runValidators: true }
+    ).select("-password")
 
-	return user
+    if (!updated) {
+        throw new HttpAppError("User not found", 404, {}, "USER_NOT_FOUND")
+    }
+    return updated
+}
+
+export const deleteAccount = async (authUserId) => {
+    const updated = await User.findByIdAndUpdate(
+        authUserId,
+        { isActive: false },
+        { new: true }
+    ).select("-password")
+
+    if (!updated) {
+        throw new HttpAppError("User not found", 404, {}, "USER_NOT_FOUND")
+    }
+    return updated
 }
 
 export const getAllUsers = async () => {
-	return User.find().select("-password")
+    return User.find().select("-password")
 }
 
-export const updateProfile = async (userId, data) => {
+export const adminUpdateUser = async (userId, data) => {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new HttpAppError("Invalid user ID", 400, {}, "BAD_REQUEST")
+    }
 
-	const { firstName, lastName, email, gender, age } = data
+    const updated = await User.findByIdAndUpdate(
+        userId,
+        data,
+        { new: true, runValidators: true }
+    ).select("-password")
 
-	return await User.findByIdAndUpdate(
-		userId,
-		{ firstName, lastName, email, gender, age },
-		{
-			new: true,
-			runValidators: true
-		}
-	)
+    if (!updated) {
+        throw new HttpAppError("User not found", 404, {}, "USER_NOT_FOUND")
+    }
+    return updated
 }
 
 export const deleteById = async (userId) => {
-	return await User.findByIdAndDelete(userId)
-
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new HttpAppError("Invalid user ID", 400, {}, "BAD_REQUEST")
+    }
+    const deleted = await User.findByIdAndDelete(userId)
+    if (!deleted) {
+        throw new HttpAppError("User not found", 404, {}, "USER_NOT_FOUND")
+    }
+    return deleted
 }

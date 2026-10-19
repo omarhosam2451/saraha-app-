@@ -68,3 +68,14 @@ export const registerSchema = loginSchema.extend({
 
     
 export const regiesterSchema = registerSchema;
+
+export const verifyOtpSchema = z.object({
+  email: z.string().email({
+    message: "Please enter a valid email address",
+  }),
+  otp: z.string().length(6, {
+    message: "OTP must be exactly 6 digits",
+  }).regex(/^\d{6}$/, {
+    message: "OTP must contain only digits",
+  }),
+});

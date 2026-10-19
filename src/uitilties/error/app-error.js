@@ -16,4 +16,11 @@ class HttpAppError extends Error {
         this.code = code;
     }
 }
+
+export class BadRequestException extends HttpAppError {
+    constructor(message, data = null, code = "BAD_REQUEST") {
+        super(message, 400, data, code);
+    }
+}
+
 export default HttpAppError;
