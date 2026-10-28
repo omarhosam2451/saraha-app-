@@ -15,8 +15,22 @@ export const generateToken = (payload, secret, options) => {
     return jwt.sign(payload, secret, options);
 };
 
-export const verifyToken = (token, secret) => {
-    return jwt.verify(token, secret);
+export const verifyToken = async (token, tokenTypeOrSecret) => {
+    if (
+        tokenTypeOrSecret === "access" ||
+        tokenTypeOrSecret === "refresh" ||
+        tokenTypeOrSecret === tokenTypeEnum.ACCESS_TOKEN ||
+        tokenTypeOrSecret === tokenTypeEnum.REFRESH_TOKEN
+    ) {
+        const { user } = await decodeToken({
+            token,
+            tokenType: tokenTypeOrSecret === "refresh" || tokenTypeOrSecret === tokenTypeEnum.REFRESH_TOKEN
+                ? tokenTypeEnum.REFRESH_TOKEN
+                : tokenTypeEnum.ACCESS_TOKEN
+        });
+        return user;
+    }
+    return jwt.verify(token, tokenTypeOrSecret);
 };
 
 export const decodeToken = async ({ token, tokenType = tokenTypeEnum.ACCESS_TOKEN } = {}) => {
@@ -67,7 +81,6 @@ export const decodeToken = async ({ token, tokenType = tokenTypeEnum.ACCESS_TOKE
 
     return { user, accessTokenData: verifiedData, tokenData: verifiedData };
 };
-
 
 export const generateTokenPair = (payload) => {
     const { role } = payload;

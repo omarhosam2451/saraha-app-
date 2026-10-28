@@ -78,4 +78,24 @@ export const verifyOtpSchema = z.object({
   }).regex(/^\d{6}$/, {
     message: "OTP must contain only digits",
   }),
-});
+});
+
+export const verify2faOtpSchema = z.object({
+  otp: z.string().length(6, {
+    message: "OTP must be exactly 6 digits",
+  }).regex(/^\d{6}$/, {
+    message: "OTP must contain only digits",
+  }),
+});
+
+export const twoFaLoginVerifySchema = z.object({
+  email: z.string().email({
+    message: "Please enter a valid email address",
+  }),
+  otp: z.string().length(6, {
+    message: "OTP must be exactly 6 digits",
+  }).regex(/^\d{6}$/, {
+    message: "OTP must contain only digits",
+  }),
+});
+

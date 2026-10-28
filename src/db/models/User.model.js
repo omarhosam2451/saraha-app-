@@ -55,6 +55,10 @@ const userSchema = new Schema({
         type: Boolean,
         default: true,
     },
+    isTwoFactorEnabled: {
+        type: Boolean,
+        default: false,
+    },
 
 }
 ,{

@@ -1,1 +1,2 @@
-export { BadRequestException, default as HttpAppError } from "./app-error.js";
+export { BadRequestException, NotFoundException, default as HttpAppError } from "./app-error.js";
+

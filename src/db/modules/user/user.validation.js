@@ -34,6 +34,7 @@ export const adminUpdateUserSchema = z.object({
         .max(20, { message: "Last name must be at most 20 characters" })
         .optional(),
     gender: z
+    
         .enum(["male", "female"], { message: "Gender must be either male or female" })
         .optional(),
     age: z

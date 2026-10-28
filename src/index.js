@@ -7,8 +7,8 @@
     import globalErrorHandelingMiddlerwhere from "./middlewere/global-error-handeling-middlerwhere.js"
     import { connectRedis } from "./common/redis.clients.js"
     import cors from "cors"
-import { transporter } from "./common/clients/emailClient.js"
-    dbconnection()
+  import { transporter } from "./common/clients/emailClient.js"
+  dbconnection()
     connectRedis()
     const app = express()
     const port = process.env.PORT
@@ -18,14 +18,13 @@ import { transporter } from "./common/clients/emailClient.js"
     app.get('/', (req, res) => res.send('Hello World!'))
     app.use('/api/auth', authController)
     app.use('/api/user', userController)
-    app.use('/api/post', messageController)
+    app.use('/api/messages', messageController)
     app.use(globalErrorHandelingMiddlerwhere)
     app.listen(port, () => console.log(`Example app listening on port ${port}!`))
-
 
     try {
   await transporter.verify();
   console.log("Server is ready to take our messages");
 } catch (err) {
   console.error("Email transporter verification failed:", err);
-}
+}

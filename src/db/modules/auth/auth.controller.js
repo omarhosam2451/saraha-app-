@@ -1,17 +1,17 @@
 import { Router } from "express";
 import * as authService from "./auth.service.js";
-import { loginSchema, registerSchema, verifyOtpSchema } from "./authValidation.js";
+import { loginSchema, registerSchema, verifyOtpSchema, verify2faOtpSchema, twoFaLoginVerifySchema } from "./authValidation.js";
 import { validation } from "../../../middlewere/validation.middlewere.js";
 import { authanticate, authorize } from "../../../middlewere/auth.middlewere.js";
 import { decodeRefreshToken } from "../../../middlewere/decodeRefreshToken.middleware.js";
 import HttpAppError from "../../../uitilties/error/app-error.js";
+import { fileType, multerLocal, processFiles } from './../../../middlewere/multer.local.js';
 
 const authController = Router();
 
 authController.get("/", (req, res) => {
     res.status(200).json({ message: "Hello from auth controller!" });
 });
-
 
 const registerHandler = async (req, res, next) => {
     try {
@@ -21,9 +21,17 @@ const registerHandler = async (req, res, next) => {
         next(error);
     }
 };
-
-authController.post("/register", validation(registerSchema), registerHandler);
-authController.post("/signup",   validation(registerSchema), registerHandler);
+ 
+authController.post(
+    "/register",
+    multerLocal({ fileType: fileType.images }).fields([
+        { name: "profile", maxCount: 1 },
+        { name: "file", maxCount: 1 }
+    ]),
+    processFiles({ fileType: fileType.images }),
+    validation(registerSchema),
+    registerHandler
+);
 
 authController.post("/verify-otp", validation(verifyOtpSchema), async (req, res, next) => {
     try {
@@ -49,7 +57,8 @@ const loginHandler = async (req, res, next) => {
     try {
         const { email, password } = req.validate;
         const result = await authService.signIn({ email, password });
-        res.status(200).json({ message: "User signed in successfully", ...result });
+        const statusCode = result.twoFactorRequired ? 202 : 200;
+        res.status(statusCode).json({ message: result.twoFactorRequired ? result.message : "User signed in successfully", ...result });
     } catch (error) {
         next(error);
     }
@@ -72,7 +81,6 @@ authController.post("/refresh-token", async (req, res, next) => {
     }
 });
 
-
 authController.get("/getUserById/:userId",authanticate,authorize(["admin"]), async (req, res, next) => {
         try {
             const { userId } = req.params;
@@ -93,7 +101,6 @@ authController.post("/google-signin", async (req, res, next) => {
     res.status(200).json({ message: "Google signin successful", data: result });
 })
 
-
 authController.post("/google-register", async (req, res, next) => { 
 const{idToken} = req.body;
 if(!idToken) {
@@ -108,6 +115,35 @@ authController.post("/logout", authanticate, decodeRefreshToken, async (req, res
     try {
         const result = await authService.logout(req.accessTokenData, req.refreshTokenData);
         res.status(200).json({ message: "User logged out successfully", data: result });
+    } catch (error) {
+        next(error);
+    }
+});
+
+authController.post("/2fa/enable", authanticate, async (req, res, next) => {
+    try {
+        const result = await authService.enableTwoFactor(req.authUser._id);
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+
+authController.post("/2fa/verify", authanticate, validation(verify2faOtpSchema), async (req, res, next) => {
+    try {
+        const { otp } = req.validate;
+        const result = await authService.verifyAndEnableTwoFactor(req.authUser._id, otp);
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+
+authController.post("/2fa/login/verify", validation(twoFaLoginVerifySchema), async (req, res, next) => {
+    try {
+        const { email, otp } = req.validate;
+        const result = await authService.verifyTwoFactorLogin({ email, otp });
+        res.status(200).json({ message: "Login successful", ...result });
     } catch (error) {
         next(error);
     }

@@ -3,7 +3,6 @@ import { transporter as emailTransporter } from "../clients/emailClient.js";
 import { BadRequestException } from "../../uitilties/error/exceptions.error.js";
 import EventEmitter from "node:events";
 
-
 const { email } = envConfig;
 
 export const sendEmail = async ({
@@ -54,4 +53,4 @@ eventEmitter.on(
   
     console.log("message send successfully");
    }
-);
+);

@@ -35,3 +35,12 @@ export const hashEmail = (email) => {
         .update(email.trim().toLowerCase())
         .digest("hex")
 }
+
+export const decrypt = (cipherData) => {
+    const [ivHex, cipherText] = cipherData.split(":");
+    const iv = Buffer.from(ivHex, "hex");
+    const decipher = crypto.createDecipheriv("aes-256-cbc", ENCRYPTION_KEY, iv);
+    let plainText = decipher.update(cipherText, "hex", "utf8");
+    plainText += decipher.final("utf8");
+    return plainText;
+}

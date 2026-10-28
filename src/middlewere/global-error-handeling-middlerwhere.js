@@ -1,6 +1,16 @@
-const globalErrorHandler = (err, req, res, next) => {
+import multer from "multer";
 
+const globalErrorHandler = (err, req, res, next) => {
     console.error(Object.keys(err), err);
+
+    if (err instanceof multer.MulterError) {
+        return res.status(400).json({
+            message: err.message,
+            error: "MULTER_ERROR",
+            field: err.field,
+            data: {}
+        });
+    }
 
     const isInvalidJson = err.type === "entity.parse.failed";
 
@@ -10,4 +20,5 @@ const globalErrorHandler = (err, req, res, next) => {
         data: err.data || {}
     });
 };
+
 export default globalErrorHandler;

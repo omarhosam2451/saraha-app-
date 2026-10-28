@@ -7,6 +7,7 @@ import {
     adminUpdateUserSchema,
     userIdParamSchema,
 } from "./user.validation.js"
+import { fileType, multerLocal, multerMemory, processFiles } from "../../../middlewere/multer.local.js"
 
 const userController = Router()
 
@@ -88,5 +89,63 @@ userController.delete("/deleteUser/:id", authanticate, authorize(["admin"]), val
     }
 }
 )
+userController.post("/singleUpload", multerLocal().single("file"), async (req, res, next) => {
+    return res.status(200).json({
+        message: "File uploaded successfully",
+        file: req.file
+    });
+
+})
+
+userController.post("/multibleUpload", multerLocal().array("file", 5), async (req, res, next) => {
+    return res.status(200).json({
+        message: "File uploaded successfully",
+        file: req.files
+    });
+})
+
+userController.post("/fieldsUpload", multerLocal().fields([{
+    name: "posts",
+    maxCount: 5,
+    name: "profilePic",
+    maxCount: 1,
+    name: "cover",
+    maxCount: 1
+}]), async (req, res, next) => {
+    return res.status(200).json({
+        message: "File uploaded successfully",
+        file: req.files
+    });
+})
+
+userController.post("/anyUpload", multerLocal().any(), async (req, res, next) => {
+    return res.status(200).json({
+        message: "File uploaded successfully",
+        file: req.files
+    });
+})
+
+userController.post("/images", multerLocal({ fileType: fileType.imaages }).array(), async (req, res, next) => {
+    return res.status(200).json({
+        message: "File uploaded successfully",
+        file: req.file
+    });
+})
+
+userController.post("/pdfs", multerLocal({ fileType: fileType.pdf }).array(), async (req, res, next) => {
+    return res.status(200).json({
+        message: "File uploaded successfully",
+        file: req.file
+    });
+})
+
+userController.post("/pdfAndImages",  multerMemory({ fileType: [...fileType.pdf, ...fileType.imaages] }).array("file"),
+    processFiles({ fileType: [...fileType.pdf, ...fileType.imaages] }),
+    async (req, res, next) => {
+    return res.status(200).json({
+        message: "File uploaded successfully",
+        file: req.files
+    });
+})
 
 export default userController

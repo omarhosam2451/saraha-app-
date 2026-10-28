@@ -17,10 +17,24 @@ class HttpAppError extends Error {
     }
 }
 
-export class BadRequestException extends HttpAppError {
-    constructor(message, data = null, code = "BAD_REQUEST") {
-        super(message, 400, data, code);
+export function BadRequestException(message = "Bad request", data = null, code = "BAD_REQUEST") {
+    const error = new HttpAppError(message, 400, data, code);
+    if (!(this instanceof BadRequestException)) {
+        throw error;
     }
+    return error;
 }
+BadRequestException.prototype = Object.create(HttpAppError.prototype);
+BadRequestException.prototype.constructor = BadRequestException;
 
-export default HttpAppError;
+export function NotFoundException(message = "Not found", data = null, code = "NOT_FOUND") {
+    const error = new HttpAppError(message, 404, data, code);
+    if (!(this instanceof NotFoundException)) {
+        throw error;
+    }
+    return error;
+}
+NotFoundException.prototype = Object.create(HttpAppError.prototype);
+NotFoundException.prototype.constructor = NotFoundException;
+
+export default HttpAppError;
