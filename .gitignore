@@ -4,3 +4,5 @@ node_modules/
 .uat.env
 .preprod.env
 *.env*
+/uploads/
+/test/
